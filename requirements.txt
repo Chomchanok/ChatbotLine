@@ -1,0 +1,7 @@
+requests >= 2.0
+future
+jsons
+Flask
+line-bot-sdk 
+gunicorn==20.1.0
+
