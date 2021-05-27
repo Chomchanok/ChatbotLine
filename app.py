@@ -8,12 +8,8 @@ import requests
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY')
 
-
-######################################################################
-line_bot_api = LineBotApi('') ## Line Channel access token
-handler = WebhookHandler('') ## Line Channel secret
-######################################################################
-
+line_bot_api = LineBotApi('b5jEOAKs0FHY3MkC1fBn/ghTXv0uJBNYDF4ae7FVoGA0OkMhXa3fRSMVEqGiCjArgHXvcUh0KN5P2u+eOn+6dBVt4gwGYRsx6+kwxg2qhjO0GXG8x+9xvNRNt475r91YmgJQCU4aEB1bHrLf2LeMigdB04t89/1O/w1cDnyilFU=') ## Line Channel access token
+handler = WebhookHandler('7d2e8f552de39ddd3f60099aa1e0f297') ## Line Channel secret
 
 ########################
 # Json from dialogflow #
@@ -24,6 +20,8 @@ def callback():
     body = request.get_data(as_text=True)
     # print(body)
     req = request.get_json(silent=True, force=True)
+    print(req)
+
     intent = req["queryResult"]["intent"]["displayName"] # Intent NLP from dialogflow
     text = req['originalDetectIntentRequest']['payload']['data']['message']['text']
     reply_token = req['originalDetectIntentRequest']['payload']['data']['replyToken']
@@ -52,6 +50,33 @@ def reply(intent, text, reply_token, id, disname):
         line_bot_api.reply_message(reply_token, text_message)
 
 
+    ######################
+    #### province API ####
+    ######################
+
+    elif intent == 'province':
+        str=text.split()
+        amp=str[0]
+        tambol=str[1]
+        data = requests.get(
+            'https://blockage.crflood.com/api/blockage/{}/{}'.format(amp,tambol))
+        print(data)
+        print(data.content)
+        json_data = json.loads(data.text)
+        num=len(json_data)
+        blk_tumbol = json_data[0]['blockage_location']['blk_tumbol']
+        message='สิ่งกีดขวางของตำบล{}\n'.format(blk_tumbol)
+        for i in range(num):
+            blk_code= json_data[i]['blk_code']
+            blk_village = json_data[i]['blockage_location']['blk_village']
+            river=json_data[i]['river']['river_name']+"/"+json_data[i]['river']['river_main']
+            mess='{}. รหัสสิ่งกีดขวาง: {} \n ลำน้ำ: {} \nที่อยู่ : {} \n' .format(i+1,blk_code,river,blk_village)
+            message=message+"\n"+mess
+            # text_message = TextSendMessage(text='{}. รหัสสิ่งกีดขวาง: {} \n ที่อยู่ : {} ต.{}\n' .format(i+1,blk_code,blk_village,blk_tumbol))
+            # message.append(text_message)
+        print(message)
+        text_message=TextSendMessage(text=message)
+        line_bot_api.reply_message(reply_token, text_message)
 
     ######################
     #### Feq Flood API ###
@@ -64,7 +89,7 @@ def reply(intent, text, reply_token, id, disname):
         ## show logs 
         #print("Input word ::", str)
 
-        data = requests.get('https://d6e1a899623f.ngrok.io/damage_freq/{}'.format(feq))
+        data = requests.get('https://1111499ec2c9.ngrok.io/damage_freq/{}'.format(feq))
         
         ## show logs 
         #print("Logs return all data :",data)
@@ -87,7 +112,7 @@ def reply(intent, text, reply_token, id, disname):
             widht_past = past_convert['width']
             depth_past = past_convert['depth']
             slop_past = past_convert['slop']
-            #print("Depart JSON logs =", widht_past +" " + depth_past + " " +slop_past)
+            # print("Depart JSON logs =", widht_past +" " + depth_past + " " +slop_past)
             
             
             mess = '{}. รหัสสิ่งขีดขวาง: {} \n ความถี่น้ำท่วม: {} \n หน้ากว้างสิ่งขีดขวาง: {} \n ความกว้าง: {} \n ความลึก: {} \n สโลป: {}'.format(i + 1, blk_id, damage_frequency, blk_length, widht_past, depth_past, slop_past)
@@ -108,7 +133,7 @@ def reply(intent, text, reply_token, id, disname):
         str=text.split()
         id_blk=str[0]
         data = requests.get(
-            'https://d6e1a899623f.ngrok.io/solution_project/{}'.format(id_blk))
+            'https://1111499ec2c9.ngrok.io/solution_project/{}'.format(id_blk))
         print(data)
         print(data.content)
         json_data = json.loads(data.text)
@@ -137,7 +162,7 @@ def reply(intent, text, reply_token, id, disname):
     #### location_blk API 
     ######################
     
-    elif intent == "location_blk":
+    elif intent == "blockages_location":
         str=text.split()
 
         province = str[0]
@@ -145,7 +170,7 @@ def reply(intent, text, reply_token, id, disname):
         tumbol = str[2]
 
         data = requests.get(
-            'https://d6e1a899623f.ngrok.io/find_location_blk/{}/{}/{}'.format(province, ampol, tumbol))
+            'https://1111499ec2c9.ngrok.io/find_location_blk/{}/{}/{}'.format(province, ampol, tumbol))
 
         print("Data show ::",data)
         print("Content Show ::",data.content)
@@ -180,6 +205,31 @@ def reply(intent, text, reply_token, id, disname):
         text_message=TextSendMessage(text=message)
         line_bot_api.reply_message(reply_token, text_message)
 
+    elif intent == "share_location":
+        str=text.split()
+        longitude = str[0]
+        latitude = str[1]
+
+        data = requests.get('https://1111499ec2c9.ngrok.io/find_distance/{}/{}'.format(longitude, latitude))
+        print('Show data = ', data)
+        json_data = json.loads(data.text)
+        num=len(json_data)
+
+        print("json data", json_data, '\n')
+        message = "ลำดับที่ใกล้ที่สุดไปไกลที่สุด \n"
+
+        for i in range(num):
+            id_location = json_data[i]['id_location']
+            longitude = json_data[i]['longitude']
+            latitude = json_data[i]['latitude']
+            location = json_data[i]['location']
+
+            mess = "{}. รหัสสถานที่ {} \n ลองจิจูต {} \n ละจิจูต {} \n สถานที่ {} ".format(i + 1, id_location, longitude, latitude, location)
+            message = message + mess + '\n \n'
+        
+        print(message)
+        text_message=TextSendMessage(text=message)
+        line_bot_api.reply_message(reply_token, text_message)
 
 
 @handler.add(MessageEvent, message=TextMessage)
