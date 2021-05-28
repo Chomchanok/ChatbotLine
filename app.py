@@ -89,7 +89,7 @@ def reply(intent, text, reply_token, id, disname):
         ## show logs 
         #print("Input word ::", str)
 
-        data = requests.get('https://1111499ec2c9.ngrok.io/damage_freq/{}'.format(feq))
+        data = requests.get('https://4871f4a67312.ngrok.io/damage_freq/{}'.format(feq))
         
         ## show logs 
         #print("Logs return all data :",data)
@@ -133,7 +133,7 @@ def reply(intent, text, reply_token, id, disname):
         str=text.split()
         id_blk=str[0]
         data = requests.get(
-            'https://1111499ec2c9.ngrok.io/solution_project/{}'.format(id_blk))
+            'https://4871f4a67312.ngrok.io/solution_project/{}'.format(id_blk))
         print(data)
         print(data.content)
         json_data = json.loads(data.text)
@@ -170,7 +170,7 @@ def reply(intent, text, reply_token, id, disname):
         tumbol = str[2]
 
         data = requests.get(
-            'https://1111499ec2c9.ngrok.io/find_location_blk/{}/{}/{}'.format(province, ampol, tumbol))
+            'https://4871f4a67312.ngrok.io/find_location_blk/{}/{}/{}'.format(province, ampol, tumbol))
 
         print("Data show ::",data)
         print("Content Show ::",data.content)
@@ -205,12 +205,16 @@ def reply(intent, text, reply_token, id, disname):
         text_message=TextSendMessage(text=message)
         line_bot_api.reply_message(reply_token, text_message)
 
+    ########################
+    # API Location long la #
+    ########################
+
     elif intent == "share_location":
         str=text.split()
         longitude = str[0]
         latitude = str[1]
 
-        data = requests.get('https://1111499ec2c9.ngrok.io/find_distance/{}/{}'.format(longitude, latitude))
+        data = requests.get('https://4871f4a67312.ngrok.io/find_distance/{}/{}'.format(longitude, latitude))
         print('Show data = ', data)
         json_data = json.loads(data.text)
         num=len(json_data)
@@ -230,6 +234,36 @@ def reply(intent, text, reply_token, id, disname):
         print(message)
         text_message=TextSendMessage(text=message)
         line_bot_api.reply_message(reply_token, text_message)
+
+    ########################
+    ## API Water IDF Value #
+    ########################
+
+    elif intent == "water_idf":
+        str=text.split()
+        idf_value = str[0]
+        longitude = str[1]
+        latitude = str[2]
+
+        data = requests.get('https://4871f4a67312.ngrok.io/water_idf/{}/{}'.format(longitude, latitude))
+        print('Show data = ', data)
+        json_data = json.loads(data.text)
+        num=len(json_data)
+
+        print("json data", json_data, '\n')
+        message = "ค่าน้ำฝนที่ใกล้พื้นที่ของคุณมากที่สุด \n"
+
+        for i in range(num):
+            id_idf = json_data[i]['id_idf']
+            value_water = json_data[i]['value_water']
+
+            mess = "ค่าน้ำฝน = {} ".format(value_water)
+            message = message + mess + '\n \n'
+        
+        print(message)
+        text_message=TextSendMessage(text=message)
+        line_bot_api.reply_message(reply_token, text_message)
+
 
 
 @handler.add(MessageEvent, message=TextMessage)
